@@ -11,79 +11,116 @@ import matplotlib.pyplot as plt
 import time
 import find_layers
 from matplotlib.patches import Rectangle
+import sys
 
-#main parameters
-n_min = 2
-n_max = 20
-n_step = 2
-nsim = 5
+if len(sys.argv)>1:
+    n_min = int(sys.argv[1])
+else:
+    n_min = 2
 
+if len(sys.argv)>2:
+    n_max = int(sys.argv[2])
+else:
+    n_max = 16
 
-#further parameters
-seed = 0
-timers=[]
-timer_precomputeds=[]
-timer_macaulay2s=[]
+if len(sys.argv)>3:
+    n_step = int(sys.argv[3])
+else:
+    n_step = 2
+    
+if len(sys.argv)>4:
+    nsim = int(sys.argv[4])
+else:
+    nsim = 5 
+    
+if len(sys.argv)>5:
+    seed = int(sys.argv[5])
+else:
+    seed = 0
+
+if len(sys.argv)>6:
+    EXACT_DEPTH_K = bool(sys.argv[6])
+else:
+    EXACT_DEPTH_K = False  
+    
+
+#initialize lists for each algorithm that will store the run time for each test function 
+results_runtime_m2=[]
+results_runtime_py=[]
+results_runtime_py_v2=[]
+results_runtime_py_v3=[]
 
 for option in ['kmin0','NCF']:
-    file1 = open('testfiles_table_nmin%i_nmax%i_nstep%i_%s_seed%i_v3.txt' % (n_min,n_max,n_step,option,seed),'r')
+#for option in ['NCF']:
+    file1 = open('testfiles/testfiles_table_nmin%i_nmax%i_nstep%i_%s_seed%i.txt' % (n_min,n_max,n_step,option,seed),'r')
     lines = file1.read().splitlines()
     file1.close()
     
-    res = [[] for i in range(n_min,n_max+1,n_step)]
-    timer = [[] for i in range(n_min,n_max+1,n_step)]
-    timer_precomputed = [[] for i in range(n_min,n_max+1,n_step)]
-    ns=list(range(n_min,n_max+1,n_step))
+    result_runtime_py = [[] for i in range(n_min,n_max+1,n_step)]
+    result_runtime_py_v2 = [[] for i in range(n_min,n_max+1,n_step)]
+    result_runtime_py_v3 = [[] for i in range(n_min,n_max+1,n_step)]
+    ns=list(range(n_min,n_max+1,n_step)) #array that contains all values for n (number of variables) to be considered
+    
     for line in lines:
         linesplit = line.split('\t')
         index = ns.index(int(linesplit[1]))
         f = list(map(int,linesplit[2].split(',')))
-        current=time.time()
-        dummy = find_layers.find_layers(f)
+        
+        current=time.time() #record how long the Python implementation find_layers.find_layers takes
+        dummy = find_layers.find_layers(f) 
         time_passed = time.time()-current
-        timer[index].append(time_passed)    
-        res[index].append(dummy)
+        result_runtime_py[index].append(time_passed)    
     
-        current=time.time()
+        current=time.time() #record how long the Python implementation find_layers.find_layers_with_precomputed_tables takes
         dummy = find_layers.find_layers_with_precomputed_tables(f)
         time_passed = time.time()-current
-        timer_precomputed[index].append(time_passed)
+        result_runtime_py_v2[index].append(time_passed)
+
+        current=time.time() #record how long the Python implementation find_layers.find_layers_v3 takes
+        dummy = find_layers.find_layers_v3(f)
+        time_passed = time.time()-current
+        result_runtime_py_v3[index].append(time_passed)
+
+    results_runtime_py.append(result_runtime_py)
+    results_runtime_py_v2.append(result_runtime_py_v2)
+    results_runtime_py_v3.append(result_runtime_py_v3)
     
+    #load the Macaley results, which must have been produced beforehand and stored in the folder Macaulay2_results
     folder = 'Macaulay2_results/'
     if option == 'kmin0':
         files = ['polys-layers-kmin0-%i_%i.txt' % (10*i+1,10*(i+1)) for i in range(4)]
     if option == 'NCF':
         files = ['polys-layers-NCF-%i_%i.txt' % (10*i+1,10*(i+1)) for i in range(4)]
     
-    timer_macaulay2 = []
-    
-    for i,fname in enumerate(files):
+    result_runtime_m2 = []
+    for i,fname in enumerate(files): #open each text file and extract the run time of each call to find_layers.m2 (stored in the last column)
         f = open(folder+fname,'r')
         textsplit = f.read().splitlines()[1:]
         f.close()
             
         for j,line in enumerate(textsplit):
             if j%nsim==0:
-                timer_macaulay2.append([])
-            timer_macaulay2[-1].append(float(line.split('\t')[-1]))
+                result_runtime_m2.append([])
+            result_runtime_m2[-1].append(float(line.split('\t')[-1]))
     
-    timers.append(timer)
-    timer_precomputeds.append(timer_precomputed)
-    timer_macaulay2s.append(timer_macaulay2)
+    results_runtime_m2.append(result_runtime_m2)
 
 
+## CREATE PLOTS
+
+#Plot of the average run time for the two algorithms and the two options, NCFs and any Boolean functions
 lss = ['o-','x:']
 f,ax = plt.subplots(figsize=(4,3))
 colors = ['r','b','g']
 labels = ['Algorithm 1','Algorithm 2','Algorithm 2 with\npre-computed values']
 option_labels = ['non-canalizing','nested canalizing']
 for i in range(2):
-    ax.semilogy(ns[1:-2],np.mean(timer_macaulay2s[i],1)[1:],lss[i],color='r',label='Algorithm 1 (Macaulay2)')
-    ax.semilogy(ns[1:-2],np.mean(timers[i],1)[1:-2],lss[i],color='b',label='Algorithm 2 (Python)')
+    ax.semilogy(ns[1:],np.mean(results_runtime_m2[i],1)[1:],lss[i],color='r',label='Algorithm 1 (Macaulay2)')
+    ax.semilogy(ns[1:],np.mean(results_runtime_py[i],1)[1:],lss[i],color='b',label='Algorithm 2 (Python)')
     #ax.semilogy(ns[1:-2],np.mean(timer_precomputeds[i],1)[1:-2],lss[i],color='g',label='Algorithm 2 (Python) with\npre-computed values')
 ax.set_xlabel('number of variables')
 ax.set_ylabel('average run time [seconds]')
-ax.set_xticks(ns[1:-2])
+ax.set_xticks(ns[1:])
 #ax.legend(loc='best',frameon=False)
 ax2 = ax.twinx()
 ax2.spines['right'].set_visible(False)
@@ -100,26 +137,28 @@ ax2.legend(loc='lower right',frameon=False,numpoints=2)
 ax.set_ylim([1.1838185699532219e-05,ax.get_ylim()[1]])
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
-plt.savefig('runtime_all_nmin%i_nmax%i_nstep%i_%s_seed%i_v3.pdf' % (4,16,n_step,option,seed),bbox_inches = "tight")
+plt.savefig('figures/runtime_all_nmin%i_nmax%i_nstep%i_%s_seed%i.pdf' % (4,16,n_step,option,seed),bbox_inches = "tight")
 
+#Plot of the average run time for the two Python implementations and the two options, NCFs and any Boolean functions
 lss = ['o-','x:']
 f,ax = plt.subplots(figsize=(4,3))
-colors = ['b','g']
-labels = ['Algorithm 2','Algorithm 2 with\npre-computed values']
+colors = ['b','g','y']
+labels = ['Algorithm 2','Algorithm 2 with\npre-computed values','Algorithm 2 with pre-\ncomputed values (new)']
 option_labels = ['non-canalizing','nested canalizing']
 for i in range(2):
-    #ax.semilogy(ns[1:-2],np.mean(timer_macaulay2s[i],1)[1:],lss[i],color='r',label='Algorithm 1 (Macaulay2)')
-    ax.semilogy(ns[1:-2],np.mean(timers[i],1)[1:-2],lss[i],color='b',label='Algorithm 2 (Python)')
-    ax.semilogy(ns[1:-2],np.mean(timer_precomputeds[i],1)[1:-2],lss[i],color='g',label='Algorithm 2 (Python) with\npre-computed values')
+    #ax.semilogy(ns[1:-2],np.mean(results_runtime_m2[i],1)[1:],lss[i],color='r',label='Algorithm 1 (Macaulay2)')
+    ax.semilogy(ns[1:],np.mean(results_runtime_py[i],1)[1:],lss[i],color='b',label='Algorithm 2 (Python)')
+    ax.semilogy(ns[1:],np.mean(results_runtime_py_v2[i],1)[1:],lss[i],color='g',label='Algorithm 2 (Python) with\npre-computed values (old)')
+    ax.semilogy(ns[1:],np.mean(results_runtime_py_v3[i],1)[1:],lss[i],color='y',label='Algorithm 2 (Python) with\npre-computed values (new)')
 ax.set_xlabel('number of variables')
 ax.set_ylabel('average run time [seconds]')
-ax.set_xticks(ns[1:-2])
+ax.set_xticks(ns[1:])
 #ax.legend(loc='best',frameon=False)
 ax2 = ax.twinx()
 ax2.spines['right'].set_visible(False)
 ax2.spines['top'].set_visible(False)
 ax2.set_yticks([])
-for i in range(2):
+for i in range(3):
     ax2.add_patch(Rectangle([4,0.93-i*0.13],0.6,0.04,color=colors[i]))
     ax2.text(5,0.93+0.01-i*0.13,labels[i],ha='left',va='center')
 y1,y2=ax2.get_ylim()
@@ -130,6 +169,6 @@ ax2.legend(loc='center left',frameon=False,numpoints=2)
 ax.set_ylim([1.1838185699532219e-05,14.663561363408045])
 ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
-plt.savefig('runtime_all_nmin%i_nmax%i_nstep%i_%s_seed%i_v3_comp.pdf' % (4,16,n_step,option,seed),bbox_inches = "tight")
+plt.savefig('figures/runtime_all_nmin%i_nmax%i_nstep%i_%s_seed%i_comp.pdf' % (4,16,n_step,option,seed),bbox_inches = "tight")
 
     
