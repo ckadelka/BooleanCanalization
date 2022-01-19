@@ -10,3 +10,5 @@ To test the run time of each algorithm, execute in the following order:
 3. python comparison_run_time.py
 
 This will create a set of plots that compare the run time of each algorithm for various numbers of inputs (default n=2,4,6,...,16) and various types of functions (any Boolean function and NCFs).
+
+Test
