@@ -116,6 +116,6 @@ ax2.set_ylim([y1,y2])
 ax2.legend(frameon=False,numpoints=2,loc='upper left', bbox_to_anchor=(0.85,0.3))
 #ax.set_ylim([1.1838185699532219e-05,ax.get_ylim()[1]])
 
-plt.savefig('figures/comparison_runtime_alg2_vs_alg2fast_nmin%i_nmax%i_nstep%i_%s_seed%i.pdf' % (n_min,n_max,n_step,option,seed),bbox_inches = "tight")
+plt.savefig('figures/comparison_runtime_alg2_vs_alg2fast_nmin%i_nmax%i_nstep%i_seed%i.pdf' % (n_min,n_max,n_step,seed),bbox_inches = "tight")
 
     
