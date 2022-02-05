@@ -1,0 +1,57 @@
+#!/bin/bash
+
+n_min=${1:-2}               #n_min = minimal number of variables considered
+n_max=${2:-16}              #n_max = maximal number of variables considered
+n_step=${3:-2}              #n_step = step size between consecutive numbers of variables considered
+nsim=${4:-5}                #nsim = number of random functions generated per considered number of variables
+seed=${5:-0}                #seed = seed for both the random and numpy.random random number generator
+EXACT_DEPTH=${6:-0}         #EXACT_DEPTH == True (or 1)  -> k == exact number of canalizing variables;
+                            #EXACT_DEPTH == False (or 0) -> k == minimal number of canalizing variables
+COMPARE_OUTPUT=${7:-0}      #COMPARE_OUTPUT == True -->  each line of output between the two algorithms will be compared
+CREATE_RUNTIME_PLOT=${8:-1} #CREATE_RUNTIME_PLOT == True -->  a plot comparing the run time will be created
+
+
+mkdir -p input
+python generate_test_functions.py $n_min $n_max $n_step $nsim $seed $EXACT_DEPTH NCF 1
+python generate_test_functions.py $n_min $n_max $n_step $nsim $seed $EXACT_DEPTH kmin0 1
+
+echo "step 1 completed: test files written to /input"
+
+
+
+ifile1_py="input/testfiles_table_nmin${n_min}_nmax${n_max}_nstep${n_step}_NCF_seed${seed}.txt"
+ofile1_py="output/testfiles_table_nmin${n_min}_nmax${n_max}_nstep${n_step}_NCF_seed${seed}_layers_py.txt"
+python run_find_layers.py $ifile1_py $ofile1_py 0
+
+ifile2_py="input/testfiles_table_nmin${n_min}_nmax${n_max}_nstep${n_step}_kmin0_seed${seed}.txt"
+ofile2_py="output/testfiles_table_nmin${n_min}_nmax${n_max}_nstep${n_step}_kmin0_seed${seed}_layers_py.txt"
+python run_find_layers.py $ifile2_py $ofile2_py 0
+
+echo "step 2 completed: Algorithm 2 output written to /output"
+
+
+
+ofile1_py_fast="output/testfiles_table_nmin${n_min}_nmax${n_max}_nstep${n_step}_NCF_seed${seed}_layers_py_fast.txt"
+python run_find_layers.py $ifile1_py $ofile1_py_fast 1
+
+ofile2_py_fast="output/testfiles_table_nmin${n_min}_nmax${n_max}_nstep${n_step}_kmin0_seed${seed}_layers_py_fast.txt"
+python run_find_layers.py $ifile2_py $ofile2_py_fast 1
+
+echo "step 3 completed: Algorithm 2 (fast implementation) output written to /output"
+
+
+if [[ $COMPARE_OUTPUT -eq 1 ]]
+then
+    python check_output.py $ofile1_py $ofile1_py_fast
+    python check_output.py $ofile2_py $ofile2_py_fast
+    echo "step 4 completed: all output the same between both algorithms"
+else
+    echo "step 4 skipped: output between algorithms was not compared"
+fi
+
+if [[ $CREATE_RUNTIME_PLOT -eq 1 ]]
+then
+    mkdir -p figures
+    python compare_run_time_alg2_vs_alg2fast.py $n_min $n_max $n_step $nsim $seed $EXACT_DEPTH
+    echo "step 5 completed: figures comparing the run time written to /figures"
+fi

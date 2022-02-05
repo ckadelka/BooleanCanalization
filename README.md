@@ -1,14 +1,29 @@
 # BooleanCanalization
-This repository contains a set of algorithms to compute the canalizing structure of Boolean functions.
+This repository contains a set of algorithms to compute the canalizing structure of Boolean functions. All algorithms compute the canalizing layer structure for any Boolean function. 
 
-Algorithm 1 is implemented in Macaulay2 (find_layers.m2) and takes as input a Boolean function in polynomial form. Algorithm 2 is implemented in Python (find_layers.py) and takes as input a Boolean function as a list of length 2^n. Both algorithms compute the canalizing layer structure for any Boolean function. 
+Algorithm 1 is implemented in Macaulay2 (find_layers.m2) and takes as input a Boolean function in polynomial form. 
 
-To test the run time of each algorithm, execute in the following order:
+Algorithm 2 is implemented in Python (find_layers.py) and takes as input a Boolean function as a list of length 2^n. There also exists a fast implementation of Algorithm 2, which relies on precomputed, redundantly used values. This fast version is used by default and should be preferred when the canalizing structure of many Boolean functions is computed.Algorithm
 
-1. python generate_test_functions_for_evaluation_of_run_time.py - test functions will be generated in the folder testfiles
-2. m2 evaluate_test_functions.m2
-3. python comparison_run_time.py
+To test and compare the run time of the algorithms, we provide two bash scripts:
 
-This will create a set of plots that compare the run time of each algorithm for various numbers of inputs (default n=2,4,6,...,16) and various types of functions (any Boolean function and NCFs).
+run_test_alg1_vs_alg2 compares Algorithm 1 with Algorithm 2 (slow implementation without precomputed tables), run_test_alg2_vs_alg2fast compares Algorithm 2 with the fast implementation of Algorithm 2 (with precomputed tables).
 
-Test
+Both bash scripts take the following optional inputs:
+
+1. n_min=${1:-2}               #n_min = minimal number of variables considered
+2. n_max=${2:-16}              #n_max = maximal number of variables considered
+3. n_step=${3:-2}              #n_step = step size between consecutive numbers of variables considered
+4. nsim=${4:-5}                #nsim = number of random functions generated per considered number of variables
+5. seed=${5:-0}                #seed = seed for both the random and numpy.random random number generator
+6. EXACT_DEPTH=${6:-0}         #EXACT_DEPTH == True (or 1)  -> k == exact number of canalizing variables;
+                            #EXACT_DEPTH == False (or 0) -> k == minimal number of canalizing variables
+7. COMPARE_OUTPUT=${7:-0}      #COMPARE_OUTPUT == True -->  each line of output between the two algorithms will be compared
+8. CREATE_RUNTIME_PLOT=${8:-1} #CREATE_RUNTIME_PLOT == True -->  a plot comparing the run time will be created
+
+Both bash scripts do the following:
+
+1. Generate test files of $nsim randomly chosen non-canalizing functions and $nsim nested canalizing (e.g., most canalizing) functions, for each number of variables in {n_min,n_min+n_step,...,n_max}
+2. Run the algorithms on the test files
+3. If COMPARE_OUTPUT is 1 (default == 0), an automatic test is conducted that compares the output of the two algorithms
+4. If CREATE_RUNTIME_PLOT is 1 (default), a plot is created that compares the run time between the algorithms and the different number of variables and types of test functions
