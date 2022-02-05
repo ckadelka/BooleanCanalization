@@ -34,13 +34,13 @@ Both bash scripts do the following:
 
 On the command line, run for example the following two commands to convince yourself that everything works correctly (note: you should not see any error messages)
 
-    bash run_test_alg1_vs_alg2 2 6 1 5 **0** 0 1 1
-    bash run_test_alg2_vs_alg2fast 2 6 1 5 **0** 0 1 1
+    bash run_test_alg1_vs_alg2 2 6 1 5 0 0 1 1
+    bash run_test_alg2_vs_alg2fast 2 6 1 5 0 0 1 1
 
-Each command compares the output of two algorithm implementations and ensures they are the same. In addition, plots comparing the run time are generated. Note that you can change the seed for the random number generators (fifth optional argument in bold). 
+Each command compares the output of two algorithm implementations and ensures they are the same. In addition, plots comparing the run time are generated. Note that you can change the seed for the random number generators (fifth optional argument). 
 The interesting plots, reported in our paper, can be generated like this (note that the first command takes a couple minutes as Algorithm 1 is slow):
 
-    bash run_test_alg1_vs_alg2 4 16 2 5 0 0 **0** 1
-    bash run_test_alg2_vs_alg2fast 4 20 2 5 0 0 **0** 1
+    bash run_test_alg1_vs_alg2 4 16 2 5 0 0 0 1
+    bash run_test_alg2_vs_alg2fast 4 20 2 5 0 0 0 1
     
-Here, we are no longer checking if both algorithms return the same output as it is a very time consuming process (we did not spend time implementing this efficiently). If you do want to check it, change the seventh optional argument (in bold) to 1.
+Here, we are no longer checking if both algorithms return the same output as it is a very time consuming process (we did not spend time implementing this efficiently). If you do want to check it, change the seventh optional argument to 1.
