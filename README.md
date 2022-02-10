@@ -1,5 +1,5 @@
 # BooleanCanalization
-This repository contains a set of algorithms to compute the canalizing structure of Boolean functions. All algorithms compute the canalizing layer structure for any Boolean function. 
+This repository contains a set of algorithms to compute the canalizing structure of Boolean functions. All algorithms compute the [canalizing layer structure for any Boolean function](https://arxiv.org/abs/2106.06580). 
 
 Algorithm 1 is implemented in Macaulay2 (find_layers.m2) and takes as input a Boolean function in polynomial form. 
 
